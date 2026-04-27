@@ -1,0 +1,2641 @@
+{
+    "openapi": "3.0.0",
+    "paths": {
+        "/": {
+            "get": {
+                "operationId": "AppController_getHello",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "App"
+                ]
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "operationId": "AuthController_login",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/rules/api/status": {
+            "get": {
+                "description": "Retrieves available rule statuses based on user role and permissions",
+                "operationId": "RulesController_getRulesStatus",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Rule statuses retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get available rule statuses",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/all": {
+            "post": {
+                "description": "Retrieves paginated list of rules with optional filters for status, transaction type, etc. Results are sorted by updated_at timestamp (DESC by default = newest first).",
+                "operationId": "RulesController_getAllRules",
+                "parameters": [
+                    {
+                        "name": "offset",
+                        "required": true,
+                        "in": "query",
+                        "description": "Starting position (0-based index)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "description": "Number of records per page",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "description": "Optional filters for rule search",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RuleFiltersDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rules retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Rules"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid pagination parameters"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get all rules (paginated)",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/ids": {
+            "get": {
+                "description": "Retrieves all available rule IDs for the authenticated user",
+                "operationId": "RulesController_getRuleIds",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Rule IDs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RuleIdResponseDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get rule IDs",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/create": {
+            "post": {
+                "description": "Creates a new transaction rule for fraud detection, AML, or compliance monitoring",
+                "operationId": "RulesController_createRule",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "description": "Rule data for creation",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Rules"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rule created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rules"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data or rule already exists"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Create new rule",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/configuration/{ruleId}": {
+            "get": {
+                "description": "Retrieves configuration details for a specific rule by rule ID",
+                "operationId": "RulesController_getRuleConfiguration",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "high-value-transfer-001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule configuration retrieved successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule configuration not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get rule configuration",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/{ruleId}": {
+            "put": {
+                "description": "Updates an existing rule with partial data (only provided fields will be updated)",
+                "operationId": "RulesController_updateRule",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier to update",
+                        "schema": {
+                            "example": "high-value-transfer-001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Partial rule data for update",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRuleDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rule updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rules"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Update existing rule",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/{id}": {
+            "get": {
+                "description": "Retrieves a specific rule by its numeric database ID",
+                "operationId": "RulesController_getRuleById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "Numeric rule ID (integer)",
+                        "schema": {
+                            "example": 1,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rules"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID format (must be numeric)"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get rule by numeric ID",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/network-map/active": {
+            "get": {
+                "description": "Retrieves the active network map configuration showing rule relationships and processing flow",
+                "operationId": "RulesController_getActiveNetworkMap",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Active network map retrieved successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "No active network map found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get active network map",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/{ruleId}/flow": {
+            "post": {
+                "description": "Creates a new flow configuration for a specific rule with nodes and connections",
+                "operationId": "RulesController_createRuleFlow",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Flow configuration with nodes and edges",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestFlow"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rule flow created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseRuleFlowDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid flow configuration"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Create rule flow",
+                "tags": [
+                    "Rules"
+                ]
+            },
+            "get": {
+                "description": "Retrieves the flow configuration for a specific rule showing nodes and connections",
+                "operationId": "RulesController_getRuleFlow",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "required": false,
+                        "in": "query",
+                        "description": "Category filter for the rule flow",
+                        "schema": {
+                            "example": "rule_builder",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule flow retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseRuleFlowDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule flow not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get rule flow",
+                "tags": [
+                    "Rules"
+                ]
+            },
+            "put": {
+                "description": "Updates the flow configuration for a specific rule with new nodes and connections",
+                "operationId": "RulesController_updateRuleFlow",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Updated flow configuration",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestSaveFlow"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rule flow updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseRuleFlowDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid flow configuration"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule flow not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Update rule flow",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/{ruleId}/flow/status": {
+            "get": {
+                "description": "Retrieves the current status of the rule flow configuration (e.g., active, draft, error)",
+                "operationId": "RulesController_getRuleFlowStatus",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "required": false,
+                        "in": "query",
+                        "description": "Category filter for the rule flow",
+                        "schema": {
+                            "example": "rule_builder",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule flow status retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseRuleFlowStatusDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule flow not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get rule flow status",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/global-variables/{ruleId}": {
+            "get": {
+                "description": "Retrieves global variables available for a specific rule configuration",
+                "operationId": "RulesController_getGlobalVariables",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "high-value-transfer-001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Global variables retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GlobalVariableDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get global variables for rule",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/clone/{ruleId}": {
+            "post": {
+                "description": "Creates a copy of an existing rule for modification and customization",
+                "operationId": "RulesController_cloneRule",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Source rule identifier to clone",
+                        "schema": {
+                            "example": "high-value-transfer-001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "description": "Payload data for rule cloning",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rule cloned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rules"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Source rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Clone existing rule",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/{ruleId}/status": {
+            "put": {
+                "description": "Updates the activation status of a specific rule with reason for change",
+                "operationId": "RulesController_updateRuleStatus",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier",
+                        "schema": {
+                            "example": "high-value-transfer-001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Status update with reason",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRuleStatusDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rule status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rules"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid status or missing reason"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Update rule status",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/rules/api/{ruleId}/metadata": {
+            "put": {
+                "description": "Updates an existing rule with partial metadata (only provided fields will be updated)",
+                "operationId": "RulesController_updateRuleMetadata",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier to update",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Partial rule data for update",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRuleDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rule metadata updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Rules"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Update existing rule metadata",
+                "tags": [
+                    "Rules"
+                ]
+            }
+        },
+        "/config/api/transaction-types": {
+            "get": {
+                "description": "Retrieve all available ISO 20022 transaction types from the configuration service",
+                "operationId": "ConfigController_getTransactionTypes",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Transaction types retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "pain.001.001.11",
+                                        "pacs.008.001.10",
+                                        "pacs.002.001.12"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get transaction types",
+                "tags": [
+                    "Configuration"
+                ]
+            }
+        },
+        "/config/api/versions/{transactionType}": {
+            "get": {
+                "description": "Retrieve all available versions for a specific transaction type",
+                "operationId": "ConfigController_getVersionsByTransactionType",
+                "parameters": [
+                    {
+                        "name": "transactionType",
+                        "required": true,
+                        "in": "path",
+                        "description": "ISO 20022 transaction type",
+                        "schema": {
+                            "example": "pain.001.001.11",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Versions retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "09",
+                                        "10",
+                                        "11"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get versions by transaction type",
+                "tags": [
+                    "Configuration"
+                ]
+            }
+        },
+        "/config/api/payload/{transactionType}/{transactionVersion}": {
+            "get": {
+                "description": "Retrieve the payload schema structure for a specific transaction type",
+                "operationId": "ConfigController_getPayloadByTransactionType",
+                "parameters": [
+                    {
+                        "name": "transactionType",
+                        "required": true,
+                        "in": "path",
+                        "description": "ISO 20022 transaction type",
+                        "schema": {
+                            "example": "pain.001.001.11",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transactionVersion",
+                        "required": true,
+                        "in": "path",
+                        "description": "Version of the ISO 20022 transaction type",
+                        "schema": {
+                            "example": "11",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payload schema retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "TxTp": {
+                                            "type": "string",
+                                            "example": "pain.001.001.11"
+                                        },
+                                        "TenantId": {
+                                            "type": "string",
+                                            "example": "tenant-001"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get payload schema by transaction type",
+                "tags": [
+                    "Configuration"
+                ]
+            }
+        },
+        "/nodes/create": {
+            "post": {
+                "description": "Creates one or more new nodes in the system for transaction processing",
+                "operationId": "NodesController_createNode",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/CreateNodeDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Nodes created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ResponseNodesDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Create node",
+                "tags": [
+                    "Nodes"
+                ]
+            }
+        },
+        "/nodes": {
+            "get": {
+                "description": "Retrieves all nodes with optional query parameters for filtering, sorting and pagination",
+                "operationId": "NodesController_getAllNodes",
+                "parameters": [
+                    {
+                        "name": "sortOrder",
+                        "required": false,
+                        "in": "query",
+                        "description": "Sort order: asc or desc",
+                        "schema": {
+                            "example": "asc",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "required": false,
+                        "in": "query",
+                        "description": "Sort nodes by specified field",
+                        "schema": {
+                            "example": "created_at",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "required": false,
+                        "in": "query",
+                        "description": "Filter nodes by category",
+                        "schema": {
+                            "example": "rule_builder",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "required": false,
+                        "in": "query",
+                        "description": "Filter nodes by type",
+                        "schema": {
+                            "example": "function",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "Starting position for pagination",
+                        "schema": {
+                            "example": 0,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of nodes to return",
+                        "schema": {
+                            "example": 50,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nodes retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ResponseNodesDto"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get all nodes",
+                "tags": [
+                    "Nodes"
+                ]
+            }
+        },
+        "/nodes/{nodeId}": {
+            "delete": {
+                "description": "Deletes a specific node by its unique identifier",
+                "operationId": "NodesController_deleteNodeById",
+                "parameters": [
+                    {
+                        "name": "nodeId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Unique node identifier",
+                        "schema": {
+                            "example": "12",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Node deleted successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Node not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Delete node by ID",
+                "tags": [
+                    "Nodes"
+                ]
+            }
+        },
+        "/nodes/execute-query": {
+            "post": {
+                "description": "Executes a query node and returns the result",
+                "operationId": "NodesController_executeQueryNode",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestQueryNodeDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Query executed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseQueryNodeDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameter"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Execute query node",
+                "tags": [
+                    "Nodes"
+                ]
+            }
+        },
+        "/simulation-logs/{ruleId}": {
+            "get": {
+                "description": "Retrieves simulation logs associated with a specific rule",
+                "operationId": "SimulationLogsController_getSimulationLogs",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier to retrieve simulation logs for",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Simulation logs retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SimulationLogsDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Rule not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "get simulation logs for a rule",
+                "tags": [
+                    "simulation-logs"
+                ]
+            }
+        },
+        "/simulation-logs/insert/{ruleId}": {
+            "post": {
+                "description": "Inserts new simulation logs into the system",
+                "operationId": "SimulationLogsController_insertSimulationLogs",
+                "parameters": [
+                    {
+                        "name": "ruleId",
+                        "required": true,
+                        "in": "path",
+                        "description": "Rule identifier to associate the simulation logs with",
+                        "schema": {
+                            "example": "001",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Simulation logs to be inserted",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestSimulationLogsDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Simulation logs inserted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SimulationLogsDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Insert simulation logs",
+                "tags": [
+                    "simulation-logs"
+                ]
+            }
+        },
+        "/send-to-dems/simulate": {
+            "post": {
+                "description": "Enqueues a background simulation job and returns a `jobId` immediately. Connect to the WebSocket namespace `/simulation`, emit `joinJob` with `{ jobId }` to subscribe to real-time progress updates (`simulationProgress` events).",
+                "operationId": "SendToDemsController_startSimulation",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StartSimulationDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Job accepted — use the returned `jobId` with the WebSocket `/simulation` namespace to track progress.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StartSimulationResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Insufficient claims"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Start the full simulation (async)",
+                "tags": [
+                    "DEMS Simulation"
+                ]
+            }
+        },
+        "/masking/api/all": {
+            "post": {
+                "operationId": "MaskingController_getAllMask",
+                "parameters": [
+                    {
+                        "name": "offset",
+                        "required": true,
+                        "in": "query",
+                        "description": "Starting position (0-based index)",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": true,
+                        "in": "query",
+                        "description": "Number of records per page",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "description": "Optional filters: status, txtp",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MaskingFiltersDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "tags": [
+                    "Masking"
+                ]
+            }
+        },
+        "/masking/api/create": {
+            "post": {
+                "description": "Creates a new masking configuration",
+                "operationId": "MaskingController_createMask",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "description": "Masking data for creation",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateMaskDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Masking created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data or masking already exists"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Create new masking configuration",
+                "tags": [
+                    "Masking"
+                ]
+            }
+        },
+        "/masking/api/{id}": {
+            "get": {
+                "description": "Retrieves a masking configuration by its UUID",
+                "operationId": "MaskingController_getMaskById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "Masking configuration ID (integer)",
+                        "schema": {
+                            "example": 1,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Masking configuration retrieved successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Masking configuration not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Get masking configuration by ID",
+                "tags": [
+                    "Masking"
+                ]
+            },
+            "put": {
+                "description": "Updates an existing masking configuration by ID (only provided fields will be updated)",
+                "operationId": "MaskingController_updateMask",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "Masking configuration ID",
+                        "schema": {
+                            "example": 1,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Partial masking data to update",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateMaskDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Masking configuration updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Masking configuration not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Update masking configuration",
+                "tags": [
+                    "Masking"
+                ]
+            }
+        },
+        "/masking/api/{id}/review": {
+            "patch": {
+                "description": "Approves or rejects a masking configuration that is under review. Comment is required when rejecting.",
+                "operationId": "MaskingController_reviewMask",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "Masking configuration ID",
+                        "schema": {
+                            "example": 1,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Review action (approve or reject) with optional comment",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReviewMaskDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Masking configuration reviewed successfully"
+                    },
+                    "400": {
+                        "description": "Comment is required when rejecting"
+                    },
+                    "401": {
+                        "description": "Unauthorized - Invalid or missing JWT token"
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Masking configuration not found"
+                    }
+                },
+                "security": [
+                    {
+                        "JWT-auth": []
+                    }
+                ],
+                "summary": "Approve or reject a masking configuration",
+                "tags": [
+                    "Masking"
+                ]
+            }
+        }
+    },
+    "info": {
+        "title": "Tazama Model Management API",
+        "description": "Complete API documentation for Tazama Model Management Backend organized by service modules",
+        "version": "1.0.0",
+        "contact": {}
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "JWT token management - Login URL: http://localhost:3005/auth/login"
+        },
+        {
+            "name": "Configuration",
+            "description": "System configuration and transaction types"
+        },
+        {
+            "name": "Nodes",
+            "description": "Node management operations"
+        },
+        {
+            "name": "Parse & Extract",
+            "description": "ISO 20022 message parsing and validation"
+        },
+        {
+            "name": "Rules",
+            "description": "Transaction rules management"
+        }
+    ],
+    "servers": [
+        {
+            "url": "http://10.10.80.37:3005",
+            "description": "API Server"
+        },
+        {
+            "url": "http://10.10.80.37:5174",
+            "description": "Frontend is running on this URL"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "JWT-auth": {
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "type": "http",
+                "name": "JWT",
+                "description": "Enter JWT token (Login at: http://10.10.80.37:3005/auth/login)",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "LoginDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "Username for authentication",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "Password for authentication",
+                        "example": "password123"
+                    }
+                },
+                "required": [
+                    "username",
+                    "password"
+                ]
+            },
+            "RuleFiltersDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "Filter by rule status",
+                        "example": "ACTIVE"
+                    },
+                    "txtp": {
+                        "type": "string",
+                        "description": "Filter by transaction type",
+                        "example": "pain.001.001.11"
+                    },
+                    "publishingStatus": {
+                        "type": "string",
+                        "description": "Filter by publishing status",
+                        "example": "PUBLISHED"
+                    },
+                    "ruleId": {
+                        "type": "string",
+                        "description": "Filter by rule ID",
+                        "example": "RULE-001"
+                    },
+                    "ruleName": {
+                        "type": "string",
+                        "description": "Filter by rule name",
+                        "example": "High Value Check"
+                    },
+                    "ruleType": {
+                        "type": "string",
+                        "description": "Filter by rule type",
+                        "example": "FRAUD"
+                    },
+                    "sortOrder": {
+                        "type": "string",
+                        "description": "Sort order for updated_at field (DESC = newest first, ASC = oldest first)",
+                        "example": "DESC",
+                        "enum": [
+                            "ASC",
+                            "DESC"
+                        ],
+                        "default": "DESC"
+                    }
+                }
+            },
+            "MetaDataDto": {
+                "type": "object",
+                "properties": {
+                    "sync": {
+                        "type": "boolean",
+                        "description": "Sync status",
+                        "example": true
+                    },
+                    "deploy": {
+                        "type": "boolean",
+                        "description": "Deploy status",
+                        "example": false
+                    },
+                    "test": {
+                        "type": "boolean",
+                        "description": "Test status",
+                        "example": false
+                    },
+                    "simulation": {
+                        "type": "boolean",
+                        "description": "Simulation status",
+                        "example": false
+                    }
+                }
+            },
+            "Rules": {
+                "type": "object",
+                "properties": {
+                    "ruleName": {
+                        "type": "string",
+                        "description": "Rule name",
+                        "example": "cbe-rule-061"
+                    },
+                    "rule_name": {
+                        "type": "object",
+                        "description": "Rule name",
+                        "example": "cbe-rule-061"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Rule description",
+                        "example": "Detects transactions above threshold"
+                    },
+                    "txtp": {
+                        "type": "string",
+                        "description": "Transaction type",
+                        "example": "pain.001.001.11"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "Rule version",
+                        "example": "1.0.0"
+                    },
+                    "txtpVersion": {
+                        "type": "string",
+                        "description": "Transaction type version",
+                        "example": "11"
+                    },
+                    "txtp_version": {
+                        "type": "string",
+                        "description": "Transaction type version",
+                        "example": "11"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Rule status",
+                        "example": "ACTIVE",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE",
+                            "TESTING"
+                        ]
+                    },
+                    "publishing_status": {
+                        "type": "string",
+                        "description": "Publishing status",
+                        "example": "PUBLISHED",
+                        "enum": [
+                            "DRAFT",
+                            "SUBMITTED",
+                            "APPROVED",
+                            "PUBLISHED"
+                        ]
+                    },
+                    "rule_type": {
+                        "type": "string",
+                        "description": "Rule type classification",
+                        "example": "fraud_detection",
+                        "enum": [
+                            "fraud_detection",
+                            "aml",
+                            "security",
+                            "compliance"
+                        ]
+                    },
+                    "rule_config_id": {
+                        "type": "string",
+                        "description": "Configuration identifier",
+                        "example": "CFG001",
+                        "maxLength": 10
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Rule database ID",
+                        "example": "1"
+                    },
+                    "metadata": {
+                        "description": "Rule metadata",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/MetaDataDto"
+                            }
+                        ]
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "description": "Last update timestamp",
+                        "example": "2024-01-16T10:30:00Z"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "description": "Creation timestamp",
+                        "example": "2024-01-16T10:30:00Z"
+                    }
+                },
+                "required": [
+                    "ruleName",
+                    "description",
+                    "txtp",
+                    "version"
+                ]
+            },
+            "RuleIdResponseDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Rule identifier",
+                        "example": "RULE-001"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Rule name",
+                        "example": "High Value Check"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ]
+            },
+            "UpdateRuleDto": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Rule description",
+                        "example": "Updated: Detects transactions above threshold"
+                    },
+                    "txtp": {
+                        "type": "string",
+                        "description": "Transaction type",
+                        "example": "pain.001.001.11"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "Rule version",
+                        "example": "1.0.0"
+                    },
+                    "txtpVersion": {
+                        "type": "string",
+                        "description": "Transaction type version",
+                        "example": "11"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Rule status",
+                        "example": "ACTIVE",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE",
+                            "TESTING"
+                        ]
+                    },
+                    "publishing_status": {
+                        "type": "string",
+                        "description": "Publishing status",
+                        "example": "PUBLISHED",
+                        "enum": [
+                            "DRAFT",
+                            "SUBMITTED",
+                            "APPROVED",
+                            "PUBLISHED"
+                        ]
+                    },
+                    "rule_type": {
+                        "type": "string",
+                        "description": "Rule type classification",
+                        "example": "fraud_detection",
+                        "enum": [
+                            "fraud_detection",
+                            "aml",
+                            "security",
+                            "compliance"
+                        ]
+                    },
+                    "rule_config_id": {
+                        "type": "string",
+                        "description": "Configuration identifier",
+                        "example": "CFG001"
+                    },
+                    "metadata": {
+                        "description": "Rule metadata",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/MetaDataDto"
+                            }
+                        ]
+                    }
+                }
+            },
+            "RequestFlow": {
+                "type": "object",
+                "properties": {
+                    "flow_json_rule_builder": {
+                        "type": "object",
+                        "description": "Json of the flow",
+                        "example": "{\"edges\": {}, \"nodes\": {} }"
+                    },
+                    "flow_json_test_case": {
+                        "type": "object",
+                        "description": "Json of the test case flow",
+                        "example": "{\"edges\": {}, \"nodes\": {} }"
+                    }
+                },
+                "required": [
+                    "flow_json_rule_builder",
+                    "flow_json_test_case"
+                ]
+            },
+            "FlowDto": {
+                "type": "object",
+                "properties": {
+                    "nodes": {
+                        "description": "Array of flow nodes",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "edges": {
+                        "description": "Array of flow edges",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "nodes",
+                    "edges"
+                ]
+            },
+            "ResponseRuleFlowDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier for the rule flow",
+                        "example": "flow-001"
+                    },
+                    "rule_id": {
+                        "type": "string",
+                        "description": "Identifier of the associated rule",
+                        "example": "01"
+                    },
+                    "flow_json_rule_builder": {
+                        "description": "Flow structure of the rule builder if no category filter applied",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FlowDto"
+                            }
+                        ]
+                    },
+                    "flow_json_test_case": {
+                        "description": "Flow structure of the test case if no category filter applied",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FlowDto"
+                            }
+                        ]
+                    },
+                    "ts_file_base64_rule_builder": {
+                        "type": "string",
+                        "description": "Base64 encoded TypeScript file representing the flow of the rule builder if no filter applied",
+                        "example": "data:application/typescript;base64,ZXhwb3J0IGNvbnN0Li4u"
+                    },
+                    "ts_file_base64_test_case": {
+                        "type": "string",
+                        "description": "Base64 encoded TypeScript file representing the flow of the test case if no filter applied",
+                        "example": "data:application/typescript;base64,ZXhwb3J0IGNvbnN0Li4u"
+                    },
+                    "flow_json": {
+                        "description": "Flow structure for category-filtered flow",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FlowDto"
+                            }
+                        ]
+                    },
+                    "ts_file_base64": {
+                        "type": "string",
+                        "description": "Base64 encoded TypeScript file representing the flow if category filter applied",
+                        "example": "data:application/typescript;base64,ZXhwb3J0IGNvbnN0Li4u"
+                    }
+                },
+                "required": [
+                    "id",
+                    "rule_id",
+                    "flow_json_rule_builder",
+                    "flow_json_test_case",
+                    "ts_file_base64_rule_builder",
+                    "ts_file_base64_test_case",
+                    "flow_json",
+                    "ts_file_base64"
+                ]
+            },
+            "ResponseRuleFlowStatusDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier for the rule flow",
+                        "example": "flow-001"
+                    },
+                    "rule_id": {
+                        "type": "string",
+                        "description": "Identifier of the associated rule",
+                        "example": "01"
+                    },
+                    "status_rule_builder": {
+                        "type": "string",
+                        "description": "rule builder status of the flow",
+                        "example": "initial"
+                    },
+                    "status_test_case": {
+                        "type": "string",
+                        "description": "test case generation status of the flow",
+                        "example": "initial"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Overall status of the flow",
+                        "example": "initial"
+                    }
+                },
+                "required": [
+                    "id",
+                    "rule_id"
+                ]
+            },
+            "RequestSaveFlow": {
+                "type": "object",
+                "properties": {
+                    "ts_file_base64": {
+                        "type": "string",
+                        "description": "ts file base64",
+                        "example": "data:application/typescript;base64,ZXhwb3J0IGNvbnN0Li4u..."
+                    },
+                    "flow_json": {
+                        "type": "object",
+                        "description": "Json of the flow",
+                        "example": "{\"edges\": {}, \"nodes\": {} }"
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Category of the flow",
+                        "example": "rule_builder"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Status of the flow",
+                        "example": "initial"
+                    }
+                },
+                "required": [
+                    "ts_file_base64",
+                    "flow_json",
+                    "category",
+                    "status"
+                ]
+            },
+            "GlobalVariableDto": {
+                "type": "object",
+                "properties": {
+                    "RuleRequest": {
+                        "type": "object",
+                        "description": "Rule request object configuration"
+                    },
+                    "RuleConfig": {
+                        "type": "object",
+                        "description": "Rule configuration object"
+                    },
+                    "RuleResult": {
+                        "type": "object",
+                        "description": "Rule result object structure"
+                    }
+                },
+                "required": [
+                    "RuleRequest",
+                    "RuleConfig",
+                    "RuleResult"
+                ]
+            },
+            "UpdateRuleStatusDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "New status for the rule",
+                        "example": "ACTIVE"
+                    },
+                    "comment": {
+                        "type": "string",
+                        "description": "Reason for status change",
+                        "example": "Updated compliance requirements"
+                    }
+                },
+                "required": [
+                    "status",
+                    "comment"
+                ]
+            },
+            "CreateNodeDto": {
+                "type": "object",
+                "properties": {
+                    "node_json": {
+                        "type": "object",
+                        "description": "JSON representation of the node",
+                        "example": {
+                            "id": "node-001",
+                            "type": "processor",
+                            "name": "Transaction Validator",
+                            "description": "Validates incoming transactions",
+                            "config": {
+                                "timeout": 5000,
+                                "retries": 3
+                            }
+                        }
+                    },
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant identifier",
+                        "example": "cbe"
+                    },
+                    "created_by": {
+                        "type": "string",
+                        "description": "Identifier of the user who created the node",
+                        "example": "1b7f59dd-8754-48eb-9573-65d106951635"
+                    },
+                    "order": {
+                        "type": "number",
+                        "description": "Order of the node",
+                        "example": 1
+                    }
+                },
+                "required": [
+                    "node_json",
+                    "tenant_id",
+                    "created_by"
+                ]
+            },
+            "ResponseNodesDto": {
+                "type": "object",
+                "properties": {
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Unique identifier for the node",
+                        "example": "cbe"
+                    },
+                    "created_by": {
+                        "type": "string",
+                        "description": "Identifier of the user who created the node",
+                        "example": "1b7f59dd-8754-48eb-9573-65d106951635"
+                    },
+                    "node_json": {
+                        "type": "object",
+                        "description": "JSON representation of the node",
+                        "example": {
+                            "id": "node-001",
+                            "type": "processor",
+                            "name": "Transaction Validator",
+                            "description": "Validates incoming transactions",
+                            "config": {
+                                "timeout": 5000,
+                                "retries": 3
+                            }
+                        }
+                    },
+                    "order": {
+                        "type": "number",
+                        "description": "Order of the node",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "format": "date-time",
+                        "type": "string",
+                        "description": "Timestamp when the node was created",
+                        "example": "2024-01-01T12:00:00Z"
+                    },
+                    "updated_at": {
+                        "format": "date-time",
+                        "type": "string",
+                        "description": "Timestamp when the node was last updated",
+                        "example": "2024-01-02T12:00:00Z"
+                    }
+                },
+                "required": [
+                    "tenant_id",
+                    "created_by",
+                    "node_json",
+                    "created_at",
+                    "updated_at"
+                ]
+            },
+            "RequestQueryNodeDto": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query string to be executed",
+                        "example": "SELECT * FROM nodes WHERE type = processor"
+                    },
+                    "dbName": {
+                        "type": "string",
+                        "description": "The name of the database to execute the query against",
+                        "example": "nodes_db"
+                    },
+                    "params": {
+                        "description": "Optional parameters for the query",
+                        "example": [
+                            "processor"
+                        ],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "query",
+                    "dbName",
+                    "params"
+                ]
+            },
+            "ResponseQueryNodeDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "string",
+                        "description": "Indicates if the query execution was successful",
+                        "example": "true"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Message related to the query execution",
+                        "example": "Query executed successfully"
+                    },
+                    "result": {
+                        "description": "Result of the executed query",
+                        "example": [
+                            {
+                                "id": "node-001",
+                                "type": "processor",
+                                "name": "Transaction Validator"
+                            }
+                        ],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "success",
+                    "message",
+                    "result"
+                ]
+            },
+            "SimulationLogsDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier for the simulation log",
+                        "example": "log_001"
+                    },
+                    "rule_id": {
+                        "type": "string",
+                        "description": "Identifier of the associated rule",
+                        "example": "rule_001"
+                    },
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant identifier",
+                        "example": "tenant_001"
+                    },
+                    "old_data": {
+                        "type": "object",
+                        "description": "old data for the simulation",
+                        "example": {
+                            "key": "value"
+                        }
+                    },
+                    "new_data": {
+                        "type": "object",
+                        "description": "updated data from the simulation",
+                        "example": {
+                            "result": "success"
+                        }
+                    },
+                    "created_by": {
+                        "type": "string",
+                        "description": "User who created the log",
+                        "example": "user_001"
+                    },
+                    "created_by_email": {
+                        "type": "string",
+                        "description": "Email of the user who created the log",
+                        "example": "john.doe@example.com"
+                    },
+                    "created_at": {
+                        "format": "date-time",
+                        "type": "string",
+                        "description": "Timestamp when the log was created",
+                        "example": "2024-10-01T12:00:00Z"
+                    },
+                    "updated_at": {
+                        "format": "date-time",
+                        "type": "string",
+                        "description": "Timestamp when the log was last updated",
+                        "example": "2024-10-01T12:30:00Z"
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Category of the flow",
+                        "example": "read_only"
+                    }
+                },
+                "required": [
+                    "id",
+                    "rule_id",
+                    "tenant_id",
+                    "old_data",
+                    "new_data",
+                    "created_by",
+                    "created_by_email",
+                    "created_at",
+                    "updated_at",
+                    "category"
+                ]
+            },
+            "RequestSimulationLogsDto": {
+                "type": "object",
+                "properties": {
+                    "old_data": {
+                        "type": "object",
+                        "description": "old data for the simulation",
+                        "example": {
+                            "key": "value"
+                        }
+                    },
+                    "new_data": {
+                        "type": "object",
+                        "description": "updated data from the simulation",
+                        "example": {
+                            "result": "success"
+                        }
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "description of the simulation log",
+                        "example": "Simulation log for rule execution"
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Category of the flow",
+                        "example": "read_only"
+                    }
+                },
+                "required": [
+                    "old_data",
+                    "new_data",
+                    "description",
+                    "category"
+                ]
+            },
+            "StartSimulationDto": {
+                "type": "object",
+                "properties": {
+                    "tableNames": {
+                        "description": "One or more simulation table names to load messages from",
+                        "example": [
+                            "sim001"
+                        ],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "tableNames"
+                ]
+            },
+            "StartSimulationResponseDto": {
+                "type": "object",
+                "properties": {
+                    "jobId": {
+                        "type": "string",
+                        "description": "Unique job identifier for tracking progress via WebSocket",
+                        "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    }
+                },
+                "required": [
+                    "jobId"
+                ]
+            },
+            "MaskingFiltersDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "example": "STATUS_01_IN_PROGRESS"
+                    },
+                    "txtp": {
+                        "type": "string",
+                        "description": "Filter by transaction type",
+                        "example": "pain.001.001.11"
+                    },
+                    "sortOrder": {
+                        "type": "string",
+                        "description": "Sort order for updated_at (DESC = newest first, ASC = oldest first)",
+                        "example": "DESC",
+                        "enum": [
+                            "ASC",
+                            "DESC"
+                        ],
+                        "default": "DESC"
+                    }
+                }
+            },
+            "CreateMaskDto": {
+                "type": "object",
+                "properties": {
+                    "txtp": {
+                        "type": "string",
+                        "description": "Transaction type",
+                        "example": "pain.001.001.11"
+                    },
+                    "txtpVersion": {
+                        "type": "string",
+                        "description": "Transaction type version",
+                        "example": "11"
+                    }
+                },
+                "required": [
+                    "txtp"
+                ]
+            },
+            "SuccessResponseDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "description": "Whether the operation succeeded",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Result message",
+                        "example": "Masking configuration created successfully"
+                    }
+                },
+                "required": [
+                    "success",
+                    "message"
+                ]
+            },
+            "UpdateMaskDto": {
+                "type": "object",
+                "properties": {
+                    "txtp": {
+                        "type": "string",
+                        "description": "Transaction type",
+                        "example": "pain.001.001.11"
+                    },
+                    "txtp_version": {
+                        "type": "string",
+                        "description": "Transaction type version",
+                        "example": "11"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Status",
+                        "example": "STATUS_02_READY_FOR_REVIEW"
+                    },
+                    "fields_masked": {
+                        "type": "number",
+                        "description": "Number of fields masked",
+                        "example": 5
+                    },
+                    "total_fields": {
+                        "type": "number",
+                        "description": "Total number of fields",
+                        "example": 10
+                    },
+                    "comments": {
+                        "type": "string",
+                        "description": "Comments",
+                        "example": "Updated masking configuration"
+                    },
+                    "tokenize": {
+                        "type": "object",
+                        "description": "Tokenize Fields",
+                        "example": {
+                            "field1": true,
+                            "field2": false
+                        }
+                    }
+                }
+            },
+            "ReviewMaskDto": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "description": "Review action",
+                        "enum": [
+                            "approve",
+                            "reject"
+                        ],
+                        "example": "approve"
+                    },
+                    "comments": {
+                        "type": "string",
+                        "description": "Comment (required when rejecting)",
+                        "example": "Needs revision"
+                    }
+                },
+                "required": [
+                    "action"
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+# dont track the rule-studio and admin-service repo LMAO
+rule-studio/
+admin-service/
+
+# don't really need to track the prompt.md either
+prompt.md
+
+# Test automation generated files
+node_modules/
+.auth/
+test-results/
+playwright-report/
+reports/
+*.token.json
+
+# Secrets — env files and user credentials
+.env
+.env.local
+.env.*.local
+docs-users.json
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
