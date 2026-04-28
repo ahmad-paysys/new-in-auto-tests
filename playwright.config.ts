@@ -58,6 +58,17 @@ export default defineConfig({
         baseURL,
       },
     },
+    {
+      name: 'e2e-frontend-only',
+      testMatch: /tests\/E2E-Frontend-Only\/.*\.spec\.ts/,
+      use: {
+        baseURL: process.env.FRONTEND_URL || 'http://10.10.80.37:5174',
+        browserName: 'chromium',
+        viewport: { width: 1280, height: 720 },
+        screenshot: 'on',
+        trace: 'on-first-retry',
+      },
+    },
   ],
   outputDir: 'test-results',
 });
