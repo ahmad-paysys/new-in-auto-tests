@@ -1,6 +1,7 @@
 # dont track the rule-studio and admin-service repo LMAO
 rule-studio/
 admin-service/
+connection-studio/
 
 # don't really need to track the prompt.md either
 prompt.md
