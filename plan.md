@@ -315,25 +315,25 @@ fetchVersionsForType(userKey, txtp) → string[]
 
 | Step | Task | Dependencies | Status |
 |------|------|-------------|--------|
-| F1 | Add `e2e-frontend-only` project to `playwright.config.ts` | None | [ ] |
-| F2 | Create `tests/E2E-Frontend-Only/helpers/browser-auth.helper.ts` | Auth fixture exists | [ ] |
-| F3 | Create `tests/E2E-Frontend-Only/page-objects/login.page.ts` | None | [ ] |
-| F4 | Create `tests/E2E-Frontend-Only/page-objects/masking-dashboard.page.ts` | None | [ ] |
-| F5 | Create `tests/E2E-Frontend-Only/page-objects/masking-create.page.ts` | None | [ ] |
-| F6 | Create `tests/E2E-Frontend-Only/page-objects/masking-configure.page.ts` | None | [ ] |
-| F7 | Create `tests/E2E-Frontend-Only/page-objects/masking-view-modal.page.ts` | None | [ ] |
-| F8 | Add `fetchVersionsForType()` to `tests/helpers/transaction-types-loader.ts` | None | [ ] |
-| F9 | Create `masking/masking-dashboard.spec.ts` | F1, F2, F4 | [ ] |
-| F10 | Create `masking/masking-create.spec.ts` | F1, F2, F5, F6, F8 | [ ] |
-| F11 | Create `masking/masking-edit.spec.ts` | F1, F2, F5, F6 | [ ] |
-| F12 | Create `masking/masking-review.spec.ts` | F1, F2, F4, F7 | [ ] |
-| F13 | Create `masking/masking-rbac.spec.ts` | F1, F2, F3, F4 | [ ] |
-| F14 | Create `masking/masking-maker-checker.spec.ts` | F1, F2, F4, F5, F6, F7 | [ ] |
-| F15 | Decide fate of `tests/e2e/masking.e2e.spec.ts` | F9–F14 done | [ ] |
+| F1 | Add `e2e-frontend-only` project to `playwright.config.ts` | None | [x] |
+| F2 | Create `tests/E2E-Frontend-Only/helpers/browser-auth.helper.ts` | Auth fixture exists | [x] |
+| F3 | Create `tests/E2E-Frontend-Only/page-objects/login.page.ts` | None | [x] |
+| F4 | Create `tests/E2E-Frontend-Only/page-objects/masking-dashboard.page.ts` | None | [x] |
+| F5 | Create `tests/E2E-Frontend-Only/page-objects/masking-create.page.ts` | None | [x] |
+| F6 | Create `tests/E2E-Frontend-Only/page-objects/masking-configure.page.ts` | None | [x] |
+| F7 | Create `tests/E2E-Frontend-Only/page-objects/masking-view-modal.page.ts` | None | [x] |
+| F8 | Add `fetchVersionsForType()` to `tests/helpers/transaction-types-loader.ts` | None | [x] |
+| F9 | Create `masking/masking-dashboard.spec.ts` | F1, F2, F4 | [x] |
+| F10 | Create `masking/masking-create.spec.ts` | F1, F2, F5, F6, F8 | [x] |
+| F11 | Create `masking/masking-edit.spec.ts` | F1, F2, F5, F6 | [x] |
+| F12 | Create `masking/masking-review.spec.ts` | F1, F2, F4, F7 | [x] |
+| F13 | Create `masking/masking-rbac.spec.ts` | F1, F2, F3, F4 | [x] |
+| F14 | Create `masking/masking-maker-checker.spec.ts` | F1, F2, F4, F5, F6, F7 | [x] |
+| F15 | Retire `tests/e2e/masking.e2e.spec.ts` (wrap in `describe.skip`) | F9–F14 done | [x] |
 
 ### Notes
 
 - **No `data-testid` attributes**: The frontend has zero `data-testid` attributes. All selectors use Playwright's recommended accessible locators (`getByRole`, `getByText`, `getByLabel`). If the frontend team adds `data-testid`s later, page objects are the single place to update.
-- **Existing `tests/e2e/masking.e2e.spec.ts`**: Overlaps significantly with the new specs. Once the E2E-Frontend-Only suite is complete and passing, the old file should be retired or moved to an archive.
+- **Existing `tests/e2e/masking.e2e.spec.ts`**: RETIRED — wrapped in `test.describe.skip`, all tests skipped. Kept as reference. Superseded by 38 tests across 6 spec files in `tests/E2E-Frontend-Only/masking/`.
 - **Scalability**: The same `tests/E2E-Frontend-Only/` folder will later gain `rules/`, `rule-builder/`, `simulation/`, `auth/` subfolders — each following the identical page-object + spec pattern.
 - **CI tag isolation**: Run only this suite with `npx playwright test --project=e2e-frontend-only` or `npx playwright test --grep @E2E-Frontend-Only`.
