@@ -162,3 +162,39 @@ export async function getCreateableTxtp(
  * Returns a txtp value that is guaranteed NOT in the allowed list.
  */
 export const FICTIONAL_TXTP = 'jrrt-hobbit-001';
+
+const versionsCache = new Map<string, string[]>();
+
+/**
+ * Fetches available versions for a specific transaction type
+ * via GET /config/api/versions/{type}.
+ *
+ * These are the versions that appear in the frontend's "Message Type Versions"
+ * dropdown when a txtp is selected on the create page.
+ *
+ * Results are cached per txtp.
+ */
+export async function fetchVersionsForType(
+  userKey: string,
+  txtp: string,
+): Promise<string[]> {
+  if (versionsCache.has(txtp)) return versionsCache.get(txtp)!;
+
+  const client = new ApiClient({
+    userKey,
+    testName: `fetch-versions-${txtp}`,
+  });
+
+  const res = await client.get(`/config/api/versions/${encodeURIComponent(txtp)}`);
+  await client.dispose();
+
+  if (res.status !== 200 || !Array.isArray(res.body)) {
+    throw new Error(
+      `Failed to fetch versions for ${txtp}: status=${res.status}, body=${JSON.stringify(res.body)}`,
+    );
+  }
+
+  const versions = res.body as string[];
+  versionsCache.set(txtp, versions);
+  return versions;
+}
