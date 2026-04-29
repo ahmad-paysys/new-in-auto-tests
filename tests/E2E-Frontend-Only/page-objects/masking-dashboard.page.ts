@@ -66,12 +66,15 @@ export class MaskingDashboardPage {
   async filterByStatus(status: string): Promise<void> {
     await this.statusFilter.click();
     const uiLabel = STATUS_LABELS[status] ?? status;
-    await this.page.getByText(uiLabel, { exact: true }).click();
+    // Scope to the ListItemButton (<li role="button">) inside the dropdown,
+    // not the whole page — status text also appears in table row cells.
+    await this.page.getByRole('button', { name: uiLabel, exact: true }).first().click();
   }
 
   async filterByMessageType(type: string): Promise<void> {
     await this.messageTypeFilter.click();
-    await this.page.getByText(type, { exact: true }).click();
+    // Same scoping — message type text may also appear in the table.
+    await this.page.getByRole('button', { name: type, exact: true }).first().click();
   }
 
   async resetFilters(): Promise<void> {
