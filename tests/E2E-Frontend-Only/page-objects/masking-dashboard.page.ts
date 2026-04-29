@@ -29,8 +29,8 @@ export class MaskingDashboardPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`${FRONTEND_URL}/masking-config`);
-    await this.page.waitForLoadState('networkidle').catch(() => {});
+    await this.page.goto(`${FRONTEND_URL}/masking-config`, { waitUntil: 'domcontentloaded' });
+    await this.page.waitForLoadState('networkidle', { timeout: 30_000 });
   }
 
   async expectLoaded(): Promise<void> {
