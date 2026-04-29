@@ -82,6 +82,13 @@ export class MaskingCreatePage {
   }
 
   async screenshot(name: string): Promise<void> {
+    // Wait for the page body to have rendered content (not blank)
+    await this.page
+      .waitForFunction(
+        () => document.body.innerText.trim().length > 0 || document.querySelector('svg, img, canvas') !== null,
+        { timeout: 5_000 },
+      )
+      .catch(() => {}); // non-critical — take screenshot anyway for diagnostics
     await this.page.screenshot({
       path: `test-results/screenshots/e2e-fo/${name}.png`,
     });
