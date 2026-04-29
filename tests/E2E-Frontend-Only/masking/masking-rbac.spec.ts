@@ -170,10 +170,10 @@ test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
 
     // Editor should see IN_PROGRESS, UNDER_REVIEW, APPROVED, REJECTED
     const pageContent = await auth.page.textContent('body');
-    expect.soft(pageContent).toContain('In Progress');
-    expect.soft(pageContent).toContain('Under Review');
-    expect.soft(pageContent).toContain('Approved');
-    expect.soft(pageContent).toContain('Rejected');
+    expect.soft(pageContent).toContain('STATUS_01_IN_PROGRESS');
+    expect.soft(pageContent).toContain('STATUS_03_UNDER_REVIEW');
+    expect.soft(pageContent).toContain('STATUS_04_APPROVED');
+    expect.soft(pageContent).toContain('STATUS_05_REJECTED');
 
     await auth.context.close();
   });
@@ -196,13 +196,13 @@ test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
 
     // Approver should see UNDER_REVIEW, APPROVED (per rbac-config)
     const pageContent = await auth.page.textContent('body');
-    expect.soft(pageContent).toContain('Under Review');
-    expect.soft(pageContent).toContain('Approved');
+    expect.soft(pageContent).toContain('STATUS_03_UNDER_REVIEW');
+    expect.soft(pageContent).toContain('STATUS_04_APPROVED');
 
     // Should NOT see IN_PROGRESS
     // Note: soft assertion — the filter may still list it but return empty results
     expect
-      .soft(pageContent?.includes('In Progress'), 'Approver should not see In Progress filter')
+      .soft(pageContent?.includes('STATUS_01_IN_PROGRESS'), 'Approver should not see In Progress filter')
       .toBe(false);
 
     await auth.context.close();

@@ -1,5 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { SCREENSHOT_RENDER_TIMEOUT, NETWORK_IDLE_TIMEOUT } from '../helpers/constants';
+import { SCREENSHOT_RENDER_TIMEOUT, NETWORK_IDLE_TIMEOUT, STATUS_LABELS } from '../helpers/constants';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://10.10.80.37:5174';
 
@@ -65,7 +65,8 @@ export class MaskingDashboardPage {
 
   async filterByStatus(status: string): Promise<void> {
     await this.statusFilter.click();
-    await this.page.getByText(status, { exact: true }).click();
+    const uiLabel = STATUS_LABELS[status] ?? status;
+    await this.page.getByText(uiLabel, { exact: true }).click();
   }
 
   async filterByMessageType(type: string): Promise<void> {
