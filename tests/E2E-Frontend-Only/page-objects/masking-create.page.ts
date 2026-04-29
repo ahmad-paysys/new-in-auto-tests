@@ -22,8 +22,13 @@ export class MaskingCreatePage {
     this.configureTab = page.getByText('Configure', { exact: true });
     this.overviewHeading = page.getByText('Tokenization Overview');
     this.selectDatasetHeading = page.getByText('Select Dataset');
-    this.messageTypeDropdown = page.getByLabel('Message Type');
-    this.versionDropdown = page.getByLabel('Message Type Versions');
+
+    // Custom dropdowns — no <label> or aria-label exist in the frontend.
+    // Each field group has label text + dropdown trigger as sibling divs.
+    // Target the placeholder text's parent container as the click trigger.
+    this.messageTypeDropdown = page.getByText('Select Message Type').locator('..');
+    this.versionDropdown = page.getByText('Select Version').locator('..');
+
     this.saveAndNextButton = page.getByRole('button', { name: 'Save & Next' });
     this.nextButton = page.getByRole('button', { name: 'Next' });
   }
