@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { SCREENSHOT_RENDER_TIMEOUT, NETWORK_IDLE_TIMEOUT } from '../helpers/constants';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://10.10.80.37:5174';
 
@@ -29,7 +30,7 @@ export class MaskingCreatePage {
 
   async goto(): Promise<void> {
     await this.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`, { waitUntil: 'domcontentloaded' });
-    await this.page.waitForLoadState('networkidle', { timeout: 30_000 });
+    await this.page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_TIMEOUT });
   }
 
   async gotoEdit(id: number): Promise<void> {
@@ -37,7 +38,7 @@ export class MaskingCreatePage {
       `${FRONTEND_URL}/masking-config/action?id=${id}&mode=edit`,
       { waitUntil: 'domcontentloaded' },
     );
-    await this.page.waitForLoadState('networkidle', { timeout: 30_000 });
+    await this.page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_TIMEOUT });
   }
 
   async expectDatasetTabActive(): Promise<void> {
@@ -82,6 +83,13 @@ export class MaskingCreatePage {
   }
 
   async screenshot(name: string): Promise<void> {
+    // Wait for the page body to have rendered content (not blank)
+    await this.page
+      .waitForFunction(
+        () => document.body.innerText.trim().length > 0 || document.querySelector('svg, img, canvas') !== null,
+        { timeout: SCREENSHOT_RENDER_TIMEOUT },
+      )
+      .catch(() => {}); // non-critical — take screenshot anyway for diagnostics
     await this.page.screenshot({
       path: `test-results/screenshots/e2e-fo/${name}.png`,
     });
