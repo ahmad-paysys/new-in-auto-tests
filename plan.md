@@ -337,3 +337,95 @@ fetchVersionsForType(userKey, txtp) → string[]
 - **Existing `tests/e2e/masking.e2e.spec.ts`**: RETIRED — wrapped in `test.describe.skip`, all tests skipped. Kept as reference. Superseded by 38 tests across 6 spec files in `tests/E2E-Frontend-Only/masking/`.
 - **Scalability**: The same `tests/E2E-Frontend-Only/` folder will later gain `rules/`, `rule-builder/`, `simulation/`, `auth/` subfolders — each following the identical page-object + spec pattern.
 - **CI tag isolation**: Run only this suite with `npx playwright test --project=e2e-frontend-only` or `npx playwright test --grep @E2E-Frontend-Only`.
+
+---
+
+## Phase 4 — E2E-Frontend-Only Fixes (Post-First-Run)
+
+### Context
+
+First run of `npm run test:e2e-fo` revealed 2 passed, 10 failed, 26 skipped. Root causes identified:
+
+1. **Token injection is plaintext** — frontend uses AES encryption (`CryptoJS`) for all sessionStorage values. Our `injectToken()` stores raw JWT → `extractData()` fails to decrypt → user treated as unauthenticated → blank pages.
+2. **`goto()` swallows navigation errors** — `.catch(() => {})` on `waitForLoadState('networkidle')` hides failures; tests proceed against blank DOM.
+3. **Screenshots capture blank pages** — no wait for rendered content before `page.screenshot()`.
+4. **RBAC redirect assertions don't wait for client-side redirect** — SPA redirect via React Router hasn't completed when URL is checked.
+5. **Network connectivity (VPN)** — intermittent `ERR_CONNECTION_TIMED_OUT` / `ERR_NETWORK_CHANGED`. Handled separately by network admins. No code fix needed.
+
+### Frontend Internals (from source analysis)
+
+- `storage.ts`: `insertData(data, key)` → AES-encrypts with `VITE_CRYPTO_KEY` → `sessionStorage.setItem(key, encrypted)`
+- `storage.ts`: `extractData(key)` → reads sessionStorage → AES-decrypts → returns object
+- `getAuthToken()` = `extractData("access_token")` — returns null if decryption fails
+- `PrivateRoute`: if `!extractData("access_token")` → redirect to `/login`
+- `RoleRoute({ group: 'data-engineer' })`: reads `extractData('user')?.claims` → if not in `DATA_ENGINEER_ROLES` → redirect to `/home`
+- `decodeToken(jwt)`: parses JWT payload, finds `claims` array entry starting with `trs_`, strips `trs_` prefix (e.g. `trs_data_engineer_editor` → `data_engineer_editor`)
+- `RoleStatusMap`: editor sees ALL statuses; approver sees only UNDER_REVIEW, APPROVED, REJECTED
+- Login flow: `insertData(token, "access_token")` + `insertData(decodeToken(token), "user")` + navigate
+- `claims` constant values: `editor`, `approver`, `publisher`, `data_engineer_editor`, `data_engineer_approver`
+
+### Fix Implementation Plan
+
+| PR | Branch | Task | Status |
+|---|---|---|---|
+| Fix-1 | `fix/token-encryption-injection` | Encrypt token + store user object + reload after injection | [ ] |
+| Fix-2 | `fix/goto-error-handling` | Remove swallowed errors in page object `goto()` methods | [ ] |
+| Fix-3 | `fix/screenshot-wait-content` | Wait for rendered content before capturing screenshots | [ ] |
+| Fix-4 | `fix/rbac-redirect-assertions` | Fix assertions + add waitForURL for client-side redirects | [ ] |
+
+---
+
+### Fix-1: Token encryption + user object injection + reload
+
+**File:** `tests/E2E-Frontend-Only/helpers/browser-auth.helper.ts`
+
+**Changes:**
+1. Install `crypto-js` + `@types/crypto-js` as devDependencies
+2. Add `VITE_CRYPTO_KEY` to `.env.example`
+3. Add helper: `encryptForFrontend(data: unknown): string` — uses `CryptoJS.AES.encrypt(JSON.stringify(data), key)`
+4. Add helper: `buildUserObject(token: string, userKey: string): object` — decode JWT, extract claims (strip `trs_` prefix), build `{ id, username, email, claims }` matching frontend's `decodeToken` output
+5. Modify `injectToken()`: encrypt token before storing, also store encrypted user object
+6. Modify `createAuthenticatedContext()`: same encryption + `page.reload()` + `page.waitForLoadState('networkidle')`
+7. Both functions: after setting sessionStorage, reload the page so the SPA re-reads the encrypted values
+
+**Key formula:**
+```
+sessionStorage['access_token'] = AES.encrypt(JSON.stringify(jwt), CRYPTO_KEY)
+sessionStorage['user'] = AES.encrypt(JSON.stringify({ id, username, email, claims }), CRYPTO_KEY)
+```
+
+---
+
+### Fix-2: Remove swallowed errors in `goto()` methods
+
+**Files:**
+- `tests/E2E-Frontend-Only/page-objects/masking-dashboard.page.ts`
+- `tests/E2E-Frontend-Only/page-objects/masking-create.page.ts`
+
+**Changes:**
+- Remove `.catch(() => {})` from `waitForLoadState('networkidle')`
+- Use `{ timeout: 30_000 }` for networkidle waits (generous for slow VPN)
+- Let navigation errors throw immediately — provides clear error messages instead of downstream selector failures
+
+---
+
+### Fix-3: Wait for rendered content before screenshots
+
+**Files:**
+- `tests/E2E-Frontend-Only/page-objects/masking-dashboard.page.ts` — `screenshot()` method
+- `tests/E2E-Frontend-Only/page-objects/masking-create.page.ts` — `screenshot()` method
+
+**Changes:**
+- Before `page.screenshot()`, wait for `body` to have non-empty text content (timeout 5s, catch silently — screenshot is non-critical)
+- This ensures screenshots capture the actual rendered UI state, not a blank DOM
+
+---
+
+### Fix-4: RBAC redirect assertions + waitForURL
+
+**File:** `tests/E2E-Frontend-Only/masking/masking-rbac.spec.ts`
+
+**Changes:**
+- Non-DE redirect tests: add `page.waitForURL()` to wait for React Router redirect to complete before asserting
+- Change assertion: wait for URL to contain `/home` or `/login` (depending on PrivateRoute vs RoleRoute)
+- Filter dropdown tests: ensure page is fully loaded before opening dropdowns (the blank page issue from Fix-1 was the real cause, but we add defensive waits too)
