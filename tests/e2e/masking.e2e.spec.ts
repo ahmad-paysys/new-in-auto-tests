@@ -2,19 +2,22 @@ import { test, expect } from '../fixtures/auth.fixture';
 import { getDataEngineerEditor, getDataEngineerApprover } from '../helpers/users-loader';
 
 /**
- * E2E Frontend tests for /masking/* features.
+ * @deprecated — RETIRED (Phase 3, F15)
  *
- * Staging branch frontend has:
- *   - /masking-config — Dashboard ("Tokenization - Dashboard")
- *   - /masking-config/action?mode=create — Create new masking config
- *   - /masking-config/action?id=N&mode=edit — Edit existing config
- *   - Routes gated to 'data-engineer' role group
- *   - "New Configuration" button visible only to data_engineer_editor
- *   - MaskView modal with Approve/Reject for data_engineer_approver
- *   - Token stored in sessionStorage (AES-encrypted)
+ * This file has been superseded by the comprehensive E2E-Frontend-Only masking suite:
+ *   tests/E2E-Frontend-Only/masking/masking-dashboard.spec.ts   (6 tests)
+ *   tests/E2E-Frontend-Only/masking/masking-create.spec.ts      (8 tests)
+ *   tests/E2E-Frontend-Only/masking/masking-edit.spec.ts        (4 tests)
+ *   tests/E2E-Frontend-Only/masking/masking-review.spec.ts      (6 tests)
+ *   tests/E2E-Frontend-Only/masking/masking-rbac.spec.ts        (7 tests)
+ *   tests/E2E-Frontend-Only/masking/masking-maker-checker.spec.ts (7 tests)
  *
- * Tests run against deployed frontend URL. Screenshots on every step.
+ * Run the new suite: npx playwright test --project=e2e-frontend-only
+ *
+ * This file is kept as a reference only. All tests are skipped.
  */
+test.describe.skip('RETIRED — see tests/E2E-Frontend-Only/masking/', () => {
+// Original file content preserved below for reference.
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://10.10.80.37:5174';
 
@@ -280,3 +283,5 @@ test.describe('Masking E2E — Login Form Validation @regression @e2e', () => {
     await context.close();
   });
 });
+
+}); // end RETIRED describe.skip
