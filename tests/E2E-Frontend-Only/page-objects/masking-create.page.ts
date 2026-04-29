@@ -28,15 +28,16 @@ export class MaskingCreatePage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`);
-    await this.page.waitForLoadState('networkidle').catch(() => {});
+    await this.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`, { waitUntil: 'domcontentloaded' });
+    await this.page.waitForLoadState('networkidle', { timeout: 30_000 });
   }
 
   async gotoEdit(id: number): Promise<void> {
     await this.page.goto(
       `${FRONTEND_URL}/masking-config/action?id=${id}&mode=edit`,
+      { waitUntil: 'domcontentloaded' },
     );
-    await this.page.waitForLoadState('networkidle').catch(() => {});
+    await this.page.waitForLoadState('networkidle', { timeout: 30_000 });
   }
 
   async expectDatasetTabActive(): Promise<void> {
