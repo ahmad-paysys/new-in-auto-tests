@@ -756,3 +756,80 @@ Additionally, the `getCreateableTxtp()` helper returns a `{ txtp, version }` pai
 | Passed | 10 | 30+ |
 | Timed Out | 7 | 0–2 (only genuine app issues) |
 | Skipped | 21 | 0–5 |
+
+---
+
+## Phase 7: Fix-7 — Status enum labels + version dropdown DOM mismatch
+
+### Run 4 Results (post Fix-6)
+
+| Metric | Count |
+|--------|-------|
+| Total  | 38    |
+| Passed | 10    |
+| Failed | 4     |
+| Timed Out | 3  |
+| Skipped | 21   |
+
+Progress vs Run 3: Timed-out dropped from 7→3, failed from 0→4 (new failures surfaced).
+
+### Root Cause A: Status filter dropdown shows enum values, not human-friendly labels
+
+**Symptom**: `filterByStatus('In Progress')` times out because `getByText('In Progress', { exact: true })` can't find matching text. RBAC assertions `toContain('In Progress')` fail.
+
+**Evidence**: Screenshot `rbac_11_editor-status-options.png` shows dropdown options are:
+- `All`
+- `STATUS_01_IN_PROGRESS`
+- `STATUS_03_UNDER_REVIEW`
+- `STATUS_04_APPROVED`
+- `STATUS_05_REJECTED`
+
+Tests pass human-friendly names ("In Progress", "Under Review", etc.) but the UI renders the raw enum values.
+
+**Affected tests (5)**:
+1. `Status filter is functional` (dashboard.spec:38) — TIMEOUT — `filterByStatus('In Progress')`
+2. `Open edit page for existing config` (edit.spec:31) — TIMEOUT — `filterByStatus('In Progress')`
+3. `Approver sees UNDER_REVIEW configs` (review.spec:30) — TIMEOUT — `filterByStatus('Under Review')`
+4. `Editor sees correct status set in filters` (rbac.spec:155) — FAIL — `toContain('In Progress')` etc.
+5. `Approver sees limited status set` (rbac.spec:181) — FAIL — `toContain('Under Review')` etc.
+
+**Fix-7a**: Add a `STATUS_LABELS` map in `constants.ts` that translates friendly names → UI enum text. Update `filterByStatus()` in the page object to use the map. Update RBAC spec assertions to check for actual enum text.
+
+### Root Cause B: Version dropdown options are `<li>` (MUI ListItemButton), not `<button>`
+
+**Symptom**: `selectVersion()` fallback does `this.versionDropdown.locator('button').first()` — no `<button>` found, times out at 5s.
+
+**Evidence**: Frontend uses a custom `<DropDown>` component that renders options as MUI `ListItemButton` (`<li>` elements) inside a `List` (`<ul>`) within a `Paper` — NOT a portal, but inside the `FormControl` container. The `this.versionDropdown` locator (parent of placeholder text) is the input wrapper, which does NOT contain the option list. Options are siblings at the FormControl level.
+
+**Affected tests (2)**:
+1. `Complete Dataset tab and go to Configure` (create.spec:79) — FAIL
+2. `Editor creates new config (IN_PROGRESS)` (maker-checker.spec:111) — FAIL
+
+**Fix-7b**: Change the fallback in `selectVersion()` to locate the first `<li>` option within the version FormControl (identified by label text "Message Type Versions"), instead of looking for `<button>` inside the trigger container.
+
+### Fix-7 Implementation Plan
+
+| Sub-fix | File | Change |
+|---------|------|--------|
+| 7a-i | `constants.ts` | Add `STATUS_LABELS` map: friendly name → UI enum string |
+| 7a-ii | `masking-dashboard.page.ts` | Update `filterByStatus()` to translate via `STATUS_LABELS` |
+| 7a-iii | `masking-rbac.spec.ts` | Update assertions to check for `STATUS_*` enum text |
+| 7b | `masking-create.page.ts` | Fix `selectVersion()` fallback: scope to FormControl by label, use `li` selector |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `tests/E2E-Frontend-Only/helpers/constants.ts` | Add `STATUS_LABELS` map |
+| `tests/E2E-Frontend-Only/page-objects/masking-dashboard.page.ts` | Import map, translate in `filterByStatus` |
+| `tests/E2E-Frontend-Only/masking/masking-rbac.spec.ts` | Update 6 assertions to use enum text |
+| `tests/E2E-Frontend-Only/page-objects/masking-create.page.ts` | Fix fallback: `li` in FormControl, not `button` in trigger |
+
+### Expected Outcome After Fix-7
+
+| Metric | Before | After (expected) |
+|--------|--------|-------------------|
+| Passed | 10 | 17+ |
+| Failed | 4 | 0 |
+| Timed Out | 3 | 0 |
+| Skipped | 21 | ~21 (cascaded from serial groups) |

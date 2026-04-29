@@ -64,7 +64,13 @@ export class MaskingCreatePage {
     if (await exactOption.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await exactOption.click();
     } else {
-      const firstOption = this.versionDropdown.locator('button').first();
+      // Dropdown options are MUI ListItemButton (<li>) rendered inside the
+      // FormControl identified by "Message Type Versions" label — not a portal.
+      const versionGroup = this.page
+        .locator('label')
+        .filter({ hasText: 'Message Type Versions' })
+        .locator('..');
+      const firstOption = versionGroup.locator('li').first();
       await firstOption.waitFor({ state: 'visible', timeout: 5_000 });
       await firstOption.click();
     }
