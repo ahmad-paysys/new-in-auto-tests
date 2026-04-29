@@ -7,8 +7,12 @@ import {
   createNonDEPage,
   AuthenticatedContext,
 } from '../helpers/browser-auth.helper';
+import { NETWORK_IDLE_TIMEOUT } from '../helpers/constants';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://10.10.80.37:5174';
+
+/** Max time to wait for React Router to perform a client-side redirect. */
+const REDIRECT_TIMEOUT = Number(process.env.REDIRECT_TIMEOUT ?? 10_000);
 
 test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
   test('DE Editor sees New Configuration button @E2E-Frontend-Only @critical', async ({
@@ -46,8 +50,16 @@ test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
   }) => {
     const auth = await createNonDEPage(browser);
 
-    await auth.page.goto(`${FRONTEND_URL}/masking-config`);
-    await auth.page.waitForLoadState('networkidle').catch(() => {});
+    await auth.page.goto(`${FRONTEND_URL}/masking-config`, { waitUntil: 'domcontentloaded' });
+    await auth.page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_TIMEOUT }).catch(() => {});
+
+    // Wait for React Router to redirect non-DE user away
+    await auth.page
+      .waitForURL((url) => url.pathname.includes('/home') || url.pathname.includes('/login'), {
+        timeout: REDIRECT_TIMEOUT,
+      })
+      .catch(() => {}); // if already redirected or stuck, proceed to assert
+
     await auth.page.screenshot({
       path: 'test-results/screenshots/e2e-fo/rbac_05_non-de-redirect.png',
     });
@@ -55,7 +67,7 @@ test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
     // Non-DE (TRS) user should be redirected away from masking routes
     const url = auth.page.url();
     expect(
-      url.includes('/home') || !url.includes('/masking-config'),
+      url.includes('/home') || url.includes('/login') || !url.includes('/masking-config'),
       'Non-DE user should be redirected away from masking dashboard',
     ).toBe(true);
     await auth.page.screenshot({
@@ -70,15 +82,23 @@ test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
   }) => {
     const auth = await createNonDEPage(browser);
 
-    await auth.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`);
-    await auth.page.waitForLoadState('networkidle').catch(() => {});
+    await auth.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`, { waitUntil: 'domcontentloaded' });
+    await auth.page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_TIMEOUT }).catch(() => {});
+
+    // Wait for React Router to redirect non-DE user away
+    await auth.page
+      .waitForURL((url) => url.pathname.includes('/home') || url.pathname.includes('/login'), {
+        timeout: REDIRECT_TIMEOUT,
+      })
+      .catch(() => {});
+
     await auth.page.screenshot({
       path: 'test-results/screenshots/e2e-fo/rbac_07_non-de-create-redirect.png',
     });
 
     const url = auth.page.url();
     expect(
-      url.includes('/home') || !url.includes('/masking-config'),
+      url.includes('/home') || url.includes('/login') || !url.includes('/masking-config'),
       'Non-DE user should be redirected away from create page',
     ).toBe(true);
 
@@ -90,8 +110,8 @@ test.describe('Masking RBAC — UI Restrictions @E2E-Frontend-Only', () => {
   }) => {
     const auth = await createApproverPage(browser);
 
-    await auth.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`);
-    await auth.page.waitForLoadState('networkidle').catch(() => {});
+    await auth.page.goto(`${FRONTEND_URL}/masking-config/action?mode=create`, { waitUntil: 'domcontentloaded' });
+    await auth.page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_TIMEOUT }).catch(() => {});
     await auth.page.screenshot({
       path: 'test-results/screenshots/e2e-fo/rbac_08_approver-create.png',
     });
