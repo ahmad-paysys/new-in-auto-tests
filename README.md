@@ -1,6 +1,6 @@
 # Rule Studio — Playwright Test Automation Framework
 
-Production-grade test automation for the Rule Studio `/masking/*` API and frontend, covering API testing, E2E browser tests, RBAC enforcement, and maker-checker workflows.
+Production-grade test automation for the Rule Studio application, covering API testing, E2E browser tests, RBAC enforcement, maker-checker workflows, and a comprehensive browser-based E2E-Frontend-Only suite.
 
 ## Quick Start
 
@@ -26,12 +26,17 @@ npm run test:report
 
 | Command | Description |
 |---|---|
-| `npm test` | Run all tests |
+| `npm test` | Run all tests (all projects) |
 | `npm run test:smoke` | Run smoke tests only |
 | `npm run test:critical` | Run smoke + critical tests |
 | `npm run test:regression` | Run full regression suite |
 | `npm run test:api` | Run API-only tests (no browser) |
-| `npm run test:e2e` | Run E2E frontend tests |
+| `npm run test:e2e` | Run legacy E2E frontend tests |
+| `npm run test:e2e-fo` | Run E2E-Frontend-Only suite (all masking specs) |
+| `npm run test:e2e-fo:smoke` | E2E-Frontend-Only — smoke tests only |
+| `npm run test:e2e-fo:critical` | E2E-Frontend-Only — smoke + critical |
+| `npm run test:e2e-fo:regression` | E2E-Frontend-Only — full regression |
+| `npm run test:e2e-fo:negative` | E2E-Frontend-Only — negative/error cases |
 | `npm run test:rbac` | Run RBAC permission tests |
 | `npm run test:workflow` | Run maker-checker workflow tests |
 | `npm run test:report` | Open HTML report |
@@ -44,7 +49,17 @@ npx playwright test --grep @smoke
 npx playwright test --grep "@smoke|@critical"
 npx playwright test --grep @api
 npx playwright test --grep @negative
+npx playwright test --grep @E2E-Frontend-Only
 npx playwright test --grep-invert @e2e
+```
+
+### Project-based filtering
+
+```bash
+npx playwright test --project=api
+npx playwright test --project=e2e
+npx playwright test --project=rbac
+npx playwright test --project=e2e-frontend-only
 ```
 
 ## Project Structure
@@ -59,16 +74,33 @@ npx playwright test --grep-invert @e2e
 │   ├── helpers/
 │   │   ├── swagger-parser.ts      # Parse docs-json.json, extract endpoints
 │   │   ├── users-loader.ts        # Parse docs-users.json, role filtering
+│   │   ├── transaction-types-loader.ts # Load txtp list + versions per type
 │   │   ├── rbac-loader.ts         # Parse rbac-config.json
 │   │   └── sql-generator.ts       # Generate rollback SQL
 │   ├── api/
 │   │   └── masking.api.spec.ts    # API tests for /masking/*
 │   ├── e2e/
-│   │   └── masking.e2e.spec.ts    # Frontend E2E tests
+│   │   └── masking.e2e.spec.ts    # (RETIRED) Legacy frontend E2E — skipped
 │   ├── rbac/
 │   │   └── masking.rbac.spec.ts   # RBAC permission tests
-│   └── workflows/
-│       └── maker-checker.spec.ts  # Maker-checker lifecycle tests
+│   ├── workflows/
+│   │   └── maker-checker.spec.ts  # Maker-checker lifecycle tests
+│   └── E2E-Frontend-Only/         # Browser-only E2E suite (no direct API calls)
+│       ├── helpers/
+│       │   └── browser-auth.helper.ts  # Login via UI, inject token, role contexts
+│       ├── page-objects/
+│       │   ├── login.page.ts           # Login page selectors & actions
+│       │   ├── masking-dashboard.page.ts # Dashboard: table, filters, pagination
+│       │   ├── masking-create.page.ts  # Create: Dataset tab, dropdowns
+│       │   ├── masking-configure.page.ts # Configure tab: fields, submit
+│       │   └── masking-view-modal.page.ts # View modal: approve/reject
+│       └── masking/
+│           ├── masking-dashboard.spec.ts    # 6 tests — dashboard rendering & filters
+│           ├── masking-create.spec.ts       # 8 tests — create happy path & validation
+│           ├── masking-edit.spec.ts         # 4 tests — edit existing config
+│           ├── masking-review.spec.ts       # 6 tests — approver approve/reject flow
+│           ├── masking-rbac.spec.ts         # 7 tests — role-based UI restrictions
+│           └── masking-maker-checker.spec.ts # 7 tests — full lifecycle
 ├── config/
 │   ├── rbac-config.json           # RBAC permission matrix (user-defined)
 │   └── environments.ts            # Environment URL management
@@ -102,12 +134,29 @@ npx playwright test --grep-invert @e2e
 - Every POST/PUT/PATCH is tracked in `test-results/data-mutations.json`
 - Rollback SQL is auto-generated in the HTML report (display-only, never executed)
 
+## Playwright Projects
+
+| Project | Scope | Browser |
+|---|---|---|
+| `api` | `tests/api/*.spec.ts` — API-only, no browser | N/A |
+| `e2e` | `tests/e2e/*.spec.ts` — Legacy frontend E2E (retired) | Chromium |
+| `rbac` | `tests/(rbac\|workflows)/*.spec.ts` — RBAC & workflow tests | N/A |
+| `e2e-frontend-only` | `tests/E2E-Frontend-Only/**/*.spec.ts` — Browser-only E2E | Chromium |
+
 ## Adding Tests for New Endpoint Groups
 
+### API tests
 1. Create a new spec file: `tests/api/rules.api.spec.ts`
 2. Update `swagger-parser.ts` filter or create a new filter function
 3. Follow the same patterns: use `ApiClient`, `expect.soft()`, tags
 4. No framework changes needed
+
+### E2E-Frontend-Only tests (browser-based)
+1. Create page objects: `tests/E2E-Frontend-Only/page-objects/my-feature.page.ts`
+2. Create spec files: `tests/E2E-Frontend-Only/my-feature/my-feature-dashboard.spec.ts`
+3. Use `createEditorPage()` / `createApproverPage()` from `browser-auth.helper.ts`
+4. Use accessible selectors (`getByRole`, `getByLabel`, `getByText`) — no `data-testid`
+5. Tag every test with `@E2E-Frontend-Only` plus severity (`@smoke`, `@critical`, `@regression`)
 
 ## Adding New Test Users
 
@@ -140,4 +189,6 @@ npx playwright test --grep-invert @e2e
 | Connection refused | Ensure the target application is running and accessible |
 | Stale Swagger | Re-export docs-json.json from the running application |
 | E2E tests fail to login | Frontend may use encrypted sessionStorage; verify VITE_CRYPTO_KEY |
+| E2E-FO token injection fails | Check `.auth/{key}.token.json` exists; re-run `npm test` to trigger globalSetup |
+| E2E-FO selectors break | UI text changed — update the relevant page object in `tests/E2E-Frontend-Only/page-objects/` |
 | Masking UI not found | The masking frontend may not be implemented yet (API-only testing) |
