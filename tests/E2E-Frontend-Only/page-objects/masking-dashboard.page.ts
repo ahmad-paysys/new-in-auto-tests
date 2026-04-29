@@ -19,9 +19,14 @@ export class MaskingDashboardPage {
     this.page = page;
     this.heading = page.getByText('Tokenization - Dashboard');
     this.newConfigButton = page.getByRole('button', { name: 'New Configuration' });
-    this.statusFilter = page.getByLabel('Status');
-    this.messageTypeFilter = page.getByLabel('Message Type');
-    this.resetFiltersButton = page.getByTitle('Reset Filters');
+
+    // Custom dropdowns — no <label> or aria-label exist in the frontend.
+    // Target the filter group container that has the label text, then its dropdown trigger sibling.
+    const filterBar = page.getByRole('button', { name: 'Reset Filters' }).locator('..');
+    this.statusFilter = filterBar.locator('div').filter({ hasText: /^Status$/ }).locator('+ div');
+    this.messageTypeFilter = filterBar.locator('div').filter({ hasText: /^Message Type$/ }).locator('+ div');
+
+    this.resetFiltersButton = page.getByRole('button', { name: 'Reset Filters' });
     this.table = page.locator('table');
     // Body rows only — skip the header row
     this.tableRows = page.locator('table tbody tr');
