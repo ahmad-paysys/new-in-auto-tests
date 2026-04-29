@@ -21,10 +21,10 @@ export class MaskingDashboardPage {
     this.newConfigButton = page.getByRole('button', { name: 'New Configuration' });
 
     // Custom dropdowns — no <label> or aria-label exist in the frontend.
-    // Target the filter group container that has the label text, then its dropdown trigger sibling.
-    const filterBar = page.getByRole('button', { name: 'Reset Filters' }).locator('..');
-    this.statusFilter = filterBar.locator('div').filter({ hasText: /^Status$/ }).locator('+ div');
-    this.messageTypeFilter = filterBar.locator('div').filter({ hasText: /^Message Type$/ }).locator('+ div');
+    // Target the placeholder text's parent container as the click trigger.
+    // Placeholder text ("Select status", "Select Message Type") is unique to the filter area.
+    this.statusFilter = page.getByText('Select status').locator('..');
+    this.messageTypeFilter = page.getByText('Select Message Type').locator('..');
 
     this.resetFiltersButton = page.getByRole('button', { name: 'Reset Filters' });
     this.table = page.locator('table');

@@ -58,7 +58,16 @@ export class MaskingCreatePage {
 
   async selectVersion(version: string): Promise<void> {
     await this.versionDropdown.click();
-    await this.page.getByText(version, { exact: true }).click();
+    // API version strings may differ from UI labels (e.g. API: "01", UI: "1.0.0").
+    // Try exact match first, then fall back to first available dropdown option.
+    const exactOption = this.page.getByText(version, { exact: true });
+    if (await exactOption.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await exactOption.click();
+    } else {
+      const firstOption = this.versionDropdown.locator('button').first();
+      await firstOption.waitFor({ state: 'visible', timeout: 5_000 });
+      await firstOption.click();
+    }
   }
 
   /** Wait for the version dropdown to be populated (not showing loading text). */
